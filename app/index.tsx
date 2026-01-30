@@ -16,8 +16,10 @@ export default function Index() {
   const [location, setLocation] = useState<LocationState | null>(null);
 
   useEffect(() => {
+    
     const startTrackingSafely = async () => {
       console.log("Checking permissions...");
+      const ignored = await LocationModule.isBatteryOptimizationIgnored();
 
       const { status: netStatus } = await Notifications.requestPermissionsAsync();
       if (netStatus !== 'granted') {
@@ -27,13 +29,20 @@ export default function Index() {
       
       // 1. Request Foreground
       const { status: fgStatus } = await Location.requestForegroundPermissionsAsync();
-      
+            
       // 2. Request Background (Android 14 requirement)
       // Note: On some versions, you must have Foreground granted before asking for Background
       if (fgStatus === 'granted') {
         await Location.requestBackgroundPermissionsAsync();
         
         console.log("Permissions granted, starting native module...");
+        if(!ignored) {
+          try {
+              LocationModule.requestBatteryOptimization();
+          } catch (e) {
+            console.log("Battery setting popup skipped or failed", e);
+          }
+        }
         try {
           LocationModule.startTracking();
         } catch (e) {

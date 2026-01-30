@@ -22,6 +22,14 @@ export function stopTracking(): void {
   return LocationTrackingModule.stopTracking();
 }
 
+export function requestBatteryOptimization(): void {
+  return LocationTrackingModule.requestBatteryOptimization();
+}
+
+export function isBatteryOptimizationIgnored(): Promise<boolean> {
+  return LocationTrackingModule.isBatteryOptimizationIgnored();
+}
+
 // 4. Use the module itself to add the listener
 export function addLocationListener(
   listener: (event: { latitude: number; longitude: number; address: string }) => void

@@ -1,16 +1,23 @@
 package com.snametech.employeetrackerManager
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import androidx.core.content.ContextCompat
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import kotlinx.coroutines.*
 import android.util.Log
+import androidx.core.net.toUri
+import android.os.PowerManager
+import android.net.Uri
+import android.provider.Settings
 
 class LocationModule : Module() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
+    @SuppressLint("BatteryLife")
     override fun definition() = ModuleDefinition {
 
         Name("LocationModule")
@@ -61,6 +68,26 @@ class LocationModule : Module() {
             val intent = Intent(mContext, LocationService::class.java)
             mContext.stopService(intent)
             return@Function true
+        }
+
+        // Inside LocationModule.kt
+        Function("requestBatteryOptimization") {
+            val intent = Intent()
+            val packageName = appContext.reactContext?.packageName
+            
+            // Check if we can go directly to the app's specific toggle
+            intent.action = android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+            intent.data = "package:$packageName".toUri()
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            
+            appContext.reactContext?.startActivity(intent)
+        }
+
+
+        Function("isBatteryOptimizationIgnored") {
+            val powerManager = appContext.reactContext?.getSystemService(Context.POWER_SERVICE) as? PowerManager
+            val packageName = appContext.reactContext?.packageName
+            return@Function powerManager?.isIgnoringBatteryOptimizations(packageName) ?: false
         }
     } 
 }
