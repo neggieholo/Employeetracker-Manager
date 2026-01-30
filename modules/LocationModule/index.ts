@@ -1,22 +1,19 @@
-import { requireNativeModule, EventEmitter, EventSubscription } from 'expo-modules-core';
+import { requireNativeModule, EventSubscription } from 'expo-modules-core';
 
-// 1. Define the event map so the Emitter knows what data to expect
-type LocationEvents = {
-  onLocationUpdate: (event: {
-    latitude: number;
-    longitude: number;
-    address: string;
-  }) => void;
-};
+// 1. Define the event map
+// type LocationEvents = {
+//   onLocationUpdate: (event: {
+//     latitude: number;
+//     longitude: number;
+//     address: string;
+//   }) => void;
+// };
 
-// 2. Load the Native Module
-// Ensure the name matches exactly what you put in Kotlin: Name("LocationModule")
+// 2. Load the Native Module 
+// We cast it to its type + the emitter logic
 const LocationTrackingModule = requireNativeModule('LocationModule');
 
-// 3. Initialize the Emitter with our custom type
-const emitter = new EventEmitter<LocationEvents>(LocationTrackingModule);
-
-// 4. Export the functions
+// 3. Export the functions
 export function startTracking(): void {
   return LocationTrackingModule.startTracking();
 }
@@ -25,10 +22,12 @@ export function stopTracking(): void {
   return LocationTrackingModule.stopTracking();
 }
 
+// 4. Use the module itself to add the listener
 export function addLocationListener(
   listener: (event: { latitude: number; longitude: number; address: string }) => void
 ): EventSubscription {
-  return emitter.addListener('onLocationUpdate', listener);
+  // In SDK 52, we call addListener directly on the module
+  return LocationTrackingModule.addListener('onLocationUpdate', listener);
 }
 
 export default LocationTrackingModule;
